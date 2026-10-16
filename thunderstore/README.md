@@ -4,6 +4,8 @@ Tired of scrolling through dozens of recipes at the forge? **WorkbenchSearchFilt
 
 ![Category filters at the black forge](https://raw.githubusercontent.com/adrirf7/WorkbenchSearch-Filters/main/docs/crafting_list.png)
 
+![Weapons category selected at the black forge](https://raw.githubusercontent.com/adrirf7/WorkbenchSearch-Filters/main/docs/weapons_filter.jpg)
+
 ![Searching for "black" at the forge](https://raw.githubusercontent.com/adrirf7/WorkbenchSearch-Filters/main/docs/search.png)
 
 ## Features

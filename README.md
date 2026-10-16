@@ -6,6 +6,8 @@ A BepInEx mod for Valheim that adds a search box and category filters (weapons, 
 
 ![Category filters at the black forge](docs/crafting_list.png)
 
+![Weapons category selected at the black forge](docs/weapons_filter.jpg)
+
 ![Searching for "black" at the forge](docs/search.png)
 
 ## Features

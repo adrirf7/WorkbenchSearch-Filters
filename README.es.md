@@ -6,6 +6,8 @@ Mod de BepInEx para Valheim que añade un buscador y filtros por categoría (arm
 
 ![Filtros por categoría en la forja negra](docs/crafting_list.png)
 
+![Categoría Armas seleccionada en la forja negra](docs/weapons_filter.jpg)
+
 ![Buscando "black" en la forja](docs/search.png)
 
 ## Características
