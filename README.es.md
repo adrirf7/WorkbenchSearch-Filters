@@ -60,8 +60,8 @@ Requisitos:
 Pasos:
 
 ```
-git clone https://github.com/adrirf7/WorkbenchSearchFilters
-cd WorkbenchSearchFilters
+git clone https://github.com/adrirf7/WorkbenchSearch-Filters
+cd WorkbenchSearch-Filters
 dotnet build -c Release -p:ValheimDir="C:\Program Files (x86)\Steam\steamapps\common\Valheim" -p:DeployToGame=false
 ```
 

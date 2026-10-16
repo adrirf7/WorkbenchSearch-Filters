@@ -2,9 +2,9 @@
 
 Tired of scrolling through dozens of recipes at the forge? **WorkbenchSearchFilters** adds a **search box** and **category filters** to the recipe list of every crafting station: workbench, forge, black forge, cauldron, artisan table, galdr table... and hand crafting too.
 
-![Category filters at the black forge](https://raw.githubusercontent.com/adrirf7/WorkbenchSearchFilters/main/docs/crafting_list.png)
+![Category filters at the black forge](https://raw.githubusercontent.com/adrirf7/WorkbenchSearch-Filters/main/docs/crafting_list.png)
 
-![Searching for "black" at the forge](https://raw.githubusercontent.com/adrirf7/WorkbenchSearchFilters/main/docs/search.png)
+![Searching for "black" at the forge](https://raw.githubusercontent.com/adrirf7/WorkbenchSearch-Filters/main/docs/search.png)
 
 ## Features
 
@@ -48,4 +48,4 @@ English, Spanish, German, French, Italian, Portuguese (Brazil and Portugal), Rus
 
 ## Source code
 
-[github.com/adrirf7/WorkbenchSearchFilters](https://github.com/adrirf7/WorkbenchSearchFilters)
+[github.com/adrirf7/WorkbenchSearch-Filters](https://github.com/adrirf7/WorkbenchSearch-Filters)
