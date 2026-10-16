@@ -1,0 +1,9 @@
+{
+    "name": "WorkbenchSearchFilters",
+    "version_number": "1.0.0",
+    "website_url": "https://github.com/adrirf7/WorkbenchSearchFilters",
+    "description": "Adds a search box and category filters (weapons, armor, tools, consumables, materials, misc) to every crafting station. Translated into 22 languages, follows the game language. Client-side only.",
+    "dependencies": [
+        "denikson-BepInExPack_Valheim-5.4.2351"
+    ]
+}
