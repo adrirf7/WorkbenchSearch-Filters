@@ -109,6 +109,54 @@ namespace WorkbenchSearchFilters
             ApplyFilter(gui);
         }
 
+        /// <summary>
+        /// Comprueba que las filas visibles guardadas siguen siendo la lista del juego. Si otro mod la ha
+        /// montado de nuevo sin pasar por el filtro, las filas ocultas guardadas ya no son de esa lista:
+        /// se destruyen (si no, al volver a mostrarlas se superponen a las nuevas) y se guarda la lista actual.
+        /// </summary>
+        private static void SyncWithGame(InventoryGui gui)
+        {
+            var recipes = gui.m_availableRecipes;
+            int index = 0;
+            bool inSync = true;
+            foreach (Entry entry in s_entries)
+            {
+                GameObject element = entry.Pair.InterfaceElement;
+                if (element == null || !element.activeSelf)
+                {
+                    continue;
+                }
+                if (index >= recipes.Count || recipes[index].InterfaceElement != element)
+                {
+                    inSync = false;
+                    break;
+                }
+                index++;
+            }
+            if (inSync && index == recipes.Count)
+            {
+                return;
+            }
+
+            var current = new HashSet<GameObject>();
+            foreach (InventoryGui.RecipeDataPair pair in recipes)
+            {
+                if (pair.InterfaceElement != null)
+                {
+                    current.Add(pair.InterfaceElement);
+                }
+            }
+            foreach (Entry entry in s_entries)
+            {
+                GameObject element = entry.Pair.InterfaceElement;
+                if (element != null && !current.Contains(element))
+                {
+                    Object.Destroy(element);
+                }
+            }
+            AfterGameRebuild(gui);
+        }
+
         /// <summary>Deja en la lista del juego solo las recetas que pasan el filtro; el resto se oculta.</summary>
         private static void ApplyFilter(InventoryGui gui)
         {
@@ -184,6 +232,7 @@ namespace WorkbenchSearchFilters
             {
                 return;
             }
+            SyncWithGame(gui);
             ApplyFilter(gui);
             if (gui.m_availableRecipes.Count == 0)
             {

@@ -78,4 +78,5 @@ El paquete NuGet `BepInEx.AssemblyPublicizer.MSBuild` se restaura automáticamen
 
 ## Cambios
 
+- **1.0.1:** corregido el solapamiento de recetas en la pestaña Reciclar de Valheim Recycle (el filtro se aplica después de que otros mods monten la lista).
 - **1.0.0:** primera versión.

@@ -11,7 +11,7 @@ namespace WorkbenchSearchFilters
     {
         public const string ModGuid = "adrirf7.WorkbenchSearchFilters";
         public const string ModName = "WorkbenchSearchFilters";
-        public const string ModVersion = "1.0.0";
+        public const string ModVersion = "1.0.1";
 
         internal static ManualLogSource Log;
 

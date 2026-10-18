@@ -46,6 +46,7 @@ English, Spanish, German, French, Italian, Portuguese (Brazil and Portugal), Rus
 
 ## Changelog
 
+- **1.0.1:** fixed recipes overlapping in the Recycle tab of Valheim Recycle (the filter now runs after other mods rebuild the list).
 - **1.0.0:** first release.
 
 ## Source code

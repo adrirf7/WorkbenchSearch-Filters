@@ -2,15 +2,22 @@ using HarmonyLib;
 
 namespace WorkbenchSearchFilters
 {
-    /// <summary>Después de que el juego monte la lista de recetas, se quitan las que no pasan el filtro.</summary>
+    /// <summary>
+    /// Después de que el juego monte la lista de recetas, se quitan las que no pasan el filtro.
+    /// El postfix va el último: otros mods (Valheim Recycle) sustituyen la lista en su propio postfix
+    /// y hay que filtrar la lista definitiva, no la que se descarta.
+    /// </summary>
     [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.UpdateRecipeList))]
     internal static class InventoryGui_UpdateRecipeList_Patch
     {
+        [HarmonyPriority(Priority.First)]
         private static void Prefix(InventoryGui __instance)
         {
             FilterBar.BeforeGameRebuild(__instance);
         }
 
+        [HarmonyPriority(Priority.Last)]
+        [HarmonyAfter("org.lafchi.plugins.valheim_recycle")]
         private static void Postfix(InventoryGui __instance)
         {
             FilterBar.EnsureCreated(__instance);
