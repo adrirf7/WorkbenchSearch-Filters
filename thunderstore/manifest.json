@@ -1,8 +1,8 @@
 {
     "name": "WorkbenchSearchFilters",
-    "version_number": "1.0.1",
+    "version_number": "1.1.0",
     "website_url": "https://github.com/adrirf7/WorkbenchSearch-Filters",
-    "description": "Adds a search box and category filters (weapons, armor, tools, consumables, materials, misc) to every crafting station. Translated into 22 languages, follows the game language. Client-side only.",
+    "description": "Search box and category filters for every crafting station. Food filters at the cauldron and prep table (health, stamina, eitr, balanced), sorted by stats. Empty categories are hidden. 22 languages, client-side only.",
     "dependencies": [
         "denikson-BepInExPack_Valheim-5.4.2351"
     ]

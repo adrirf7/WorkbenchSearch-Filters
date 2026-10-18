@@ -1,0 +1,1 @@
+Adds a search box and category filters to every crafting station. At the cauldron and the food preparation table, filter food by health, stamina, eitr or balanced, sorted from best to worst. Categories with nothing to craft are hidden. Client-side, translated into 22 languages.

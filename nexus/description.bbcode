@@ -1,0 +1,82 @@
+[center][img]https://raw.githubusercontent.com/adrirf7/WorkbenchSearch-Filters/main/docs/header.jpg[/img][/center]
+
+[center][size=4][color=#ECA830][b]Find any recipe in seconds[/b][/color][/size]
+[size=3][color=#D8CFC2]Tired of scrolling through dozens of recipes at the forge?
+Type what you want or pick a category, at every crafting station.[/color][/size][/center]
+
+[line]
+
+[size=5][color=#ECA830][b]The problem[/b][/color][/size]
+
+[size=3]Late in the game, the forge, the black forge or the cauldron list dozens of recipes in one long column: arrows, weapons, armor, tools and food all mixed together. The game has no way to search or filter them, so you scroll up and down every time you want to craft something.[/size]
+
+[size=3][color=#ECA830][b]WorkbenchSearchFilters[/b][/color] adds a search box and category buttons on top of the recipe list, so you only see what you are looking for.[/size]
+
+[center][img]https://raw.githubusercontent.com/adrirf7/WorkbenchSearch-Filters/main/docs/weapons_filter.png?v=2[/img]
+[size=2][color=#A89F94][i]Weapons category selected at the forge[/i][/color][/size][/center]
+
+[line]
+
+[size=5][color=#ECA830][b]Features[/b][/color][/size]
+
+[list]
+[*][size=3][color=#ECA830][b]Search box[/b][/color] - filters as you type by the item's name in your game language. Case and accents are ignored.[/size]
+[*][size=3][color=#ECA830][b]Category buttons[/b][/color] - All, Weapons, Armor, Tools, Consumables, Materials and Misc. Hover a button to see its name.[/size]
+[*][size=3][color=#ECA830][b]Only what the station has[/b][/color] - categories with no recipes at the current station are hidden, and those with no results for your search are dimmed.[/size]
+[*][size=3][color=#ECA830][b]Food filters[/b][/color] - at the cauldron and the food preparation table, filter food by health, stamina, eitr or balanced, each sorted from best to worst.[/size]
+[*][size=3][color=#ECA830][b]Typing doesn't control the game[/b][/color] - while you type, your character doesn't move and E or Tab don't close the inventory.[/size]
+[*][size=3][color=#ECA830][b]Everywhere[/b][/color] - Craft and Upgrade tabs, every station, hand crafting, and stations or items added by other mods.[/size]
+[*][size=3][color=#ECA830][b]Compatible with Valheim Recycle[/b][/color] - the filters also work in its Recycle tab.[/size]
+[*][size=3][color=#ECA830][b]Translated[/b][/color] - follows the game language (22 languages, English for the rest).[/size]
+[*][size=3][color=#ECA830][b]Client-side only[/b][/color] - other players and the server don't need it.[/size]
+[/list]
+
+[center][img]https://raw.githubusercontent.com/adrirf7/WorkbenchSearch-Filters/main/docs/crafting_list.png?v=2[/img]
+[size=2][color=#A89F94][i]The search box and the category buttons[/i][/color][/size][/center]
+
+[line]
+
+[size=5][color=#ECA830][b]Food filters[/b][/color][/size]
+
+[size=3]At the cauldron and the food preparation table, the category buttons become food filters, each with a colored fork:[/size]
+
+[list]
+[*][size=3][color=#FF5959][b]Red fork - Health food[/b][/color]: health is more than double the stamina.[/size]
+[*][size=3][color=#FFD940][b]Yellow fork - Stamina food[/b][/color]: stamina is more than double the health.[/size]
+[*][size=3][color=#BF73FF][b]Purple fork - Eitr food[/b][/color]: eitr is more than double the health and the stamina.[/size]
+[*][size=3][color=#FFFFFF][b]White fork - Balanced food[/b][/color]: everything else.[/size]
+[*][size=3][color=#ECA830][b]Meads[/b][/color]: mead bases and anything else that isn't food.[/size]
+[/list]
+
+[size=3]It's the same rule the game uses to color the food marker in your inventory. Each food filter is sorted from most to least health, stamina or eitr (balanced food: health + stamina), and uncooked food counts as the food it becomes once cooked.[/size]
+
+[center][img]https://raw.githubusercontent.com/adrirf7/WorkbenchSearch-Filters/main/docs/cauldron_food_filters.png[/img]
+[size=2][color=#A89F94][i]Health food at the cauldron, sorted by health[/i][/color][/size][/center]
+
+[line]
+
+[size=5][color=#ECA830][b]Configuration[/b][/color][/size]
+
+[size=3]File: [font=Courier New]BepInEx/config/WorkbenchSearchFilters.adrirf7.cfg[/font][/size]
+
+[list]
+[*][size=3][color=#ECA830][b]ClearSearchOnClose[/b][/color] [color=#A89F94](default: true)[/color] - clear the search text when the inventory is closed.[/size]
+[*][size=3][color=#ECA830][b]RememberCategory[/b][/color] [color=#A89F94](default: true)[/color] - keep the selected category between openings.[/size]
+[*][size=3][color=#ECA830][b]CategoryOverrides[/b][/color] - move specific items to another category, as [font=Courier New]Prefab:Category[/font] separated by commas. Every time you enter a world, [font=Courier New]BepInEx/config/WorkbenchSearchFilters.adrirf7.Categories.txt[/font] lists every craftable item with its prefab name and category.[/size]
+[/list]
+
+[line]
+
+[size=5][color=#ECA830][b]Installation[/b][/color][/size]
+
+[size=3]1. Install [url=https://www.nexusmods.com/valheim/mods/4]BepInExPack Valheim[/url].
+2. Extract [font=Courier New]WorkbenchSearchFilters-1.1.0-nexus.zip[/font] into your Valheim folder, so the DLL ends up in [font=Courier New]BepInEx/plugins/WorkbenchSearchFilters/[/font].
+3. Done. Only you need it, it works on any server.[/size]
+
+[size=5][color=#ECA830][b]Languages[/b][/color][/size]
+
+[size=2][color=#D8CFC2]English, Spanish, German, French, Italian, Portuguese (Brazil and Portugal), Russian, Ukrainian, Polish, Czech, Dutch, Swedish, Norwegian, Danish, Finnish, Turkish, Hungarian, Chinese (Simplified and Traditional), Japanese and Korean.[/color][/size]
+
+[line]
+
+[center][size=2][color=#A89F94]Source code: [url=https://github.com/adrirf7/WorkbenchSearch-Filters]github.com/adrirf7/WorkbenchSearch-Filters[/url][/color][/size][/center]

@@ -21,23 +21,33 @@ namespace WorkbenchSearchFilters
 
         private static readonly Color s_buttonColor = new Color(0f, 0f, 0f, 0.55f);
         private static readonly Color s_selectedColor = new Color(0.85f, 0.6f, 0.2f, 0.9f);
-        private static readonly Color s_iconColor = Color.white;
-        private static readonly Color s_emptyIconColor = new Color(1f, 1f, 1f, 0.3f);
+        private const float EmptyIconAlpha = 0.3f;
 
         private sealed class CategoryButton
         {
             public Category Category;
             public Image Background;
             public Graphic Content;
+            public Color ContentColor; // el tenedor de cada comida tiene su color
         }
 
         private static GameObject s_root;
+        // Lo que se modificó al crear la barra, para deshacerlo en Teardown.
+        private static InventoryGui s_gui;
+        private static RectTransform s_list;
+        private static RectTransform s_scrollbar;
         private static TMP_InputField s_search;
         private static TMP_Text s_allLabel;
         private static readonly List<CategoryButton> s_buttons = new List<CategoryButton>();
 
+        // Categoría elegida por el jugador. Si la estación actual no tiene nada de ella se filtra por "Todo",
+        // pero se recuerda para cuando vuelva a una estación que sí la tenga.
         internal static Category CurrentCategory = Category.All;
+        private static Category s_activeCategory = Category.All;
         internal static string SearchText = "";
+        // La lista actual es de una estación de comida (caldero, mesa de preparación): otros filtros.
+        private static bool s_foodStation;
+        private static bool? s_buttonsFoodStation;
 
         internal static bool IsSearchFocused => s_search != null && s_search.isFocused;
 
@@ -66,6 +76,53 @@ namespace WorkbenchSearchFilters
             }
         }
 
+        /// <summary>
+        /// Quita la barra y devuelve la lista de recetas a como la dejó el juego. Se llama al descargar el mod,
+        /// después de quitar los parches, para que al recargarlo en caliente no se dupliquen ni se acorte otra vez la lista.
+        /// </summary>
+        internal static void Teardown()
+        {
+            if (s_search != null && s_search.isFocused)
+            {
+                s_search.DeactivateInputField();
+            }
+            foreach (Entry entry in s_entries)
+            {
+                if (entry.Pair.InterfaceElement != null && !entry.Pair.InterfaceElement.activeSelf)
+                {
+                    Object.Destroy(entry.Pair.InterfaceElement);
+                }
+            }
+            s_entries.Clear();
+
+            // Si la InventoryGui ya no existe (cambio de mundo, cierre del juego) no queda nada que restaurar.
+            if (s_root != null && s_gui != null)
+            {
+                Object.Destroy(s_root);
+                if (s_list != null)
+                {
+                    s_list.offsetMax += new Vector2(0f, BarHeight);
+                }
+                if (s_scrollbar != null)
+                {
+                    s_scrollbar.offsetMax += new Vector2(0f, BarHeight);
+                }
+                s_gui.m_recipeListBaseSize += BarHeight;
+                if (InventoryGui.IsVisible() && Player.m_localPlayer != null)
+                {
+                    s_gui.UpdateCraftingPanel(false);
+                }
+            }
+            s_root = null;
+            s_gui = null;
+            s_list = null;
+            s_scrollbar = null;
+            s_search = null;
+            s_allLabel = null;
+            s_buttons.Clear();
+            s_buttonsFoodStation = null;
+        }
+
         // ---------------------------------------------------------------- filtrado
 
         // Lista completa (ya ordenada) que montó el juego la última vez, con la categoría y el nombre ya calculados.
@@ -76,6 +133,7 @@ namespace WorkbenchSearchFilters
             public InventoryGui.RecipeDataPair Pair;
             public Category Category;
             public string Name;
+            public float FoodValue; // vida/vigor/eitr que da, para ordenar dentro de cada filtro de comida
         }
 
         private static readonly List<Entry> s_entries = new List<Entry>();
@@ -97,13 +155,16 @@ namespace WorkbenchSearchFilters
         internal static void AfterGameRebuild(InventoryGui gui)
         {
             s_entries.Clear();
+            s_foodStation = Categories.IsFoodStation(Player.m_localPlayer != null ? Player.m_localPlayer.GetCurrentCraftingStation() : null);
             foreach (InventoryGui.RecipeDataPair pair in gui.m_availableRecipes)
             {
+                Category category = Categories.Classify(pair.Recipe.m_item, s_foodStation);
                 s_entries.Add(new Entry
                 {
                     Pair = pair,
-                    Category = Categories.Classify(pair.Recipe.m_item),
-                    Name = Localization.instance.Localize(pair.Recipe.m_item.m_itemData.m_shared.m_name)
+                    Category = category,
+                    Name = Localization.instance.Localize(pair.Recipe.m_item.m_itemData.m_shared.m_name),
+                    FoodValue = Categories.FoodSortValue(pair.Recipe.m_item, category)
                 });
             }
             ApplyFilter(gui);
@@ -116,28 +177,8 @@ namespace WorkbenchSearchFilters
         /// </summary>
         private static void SyncWithGame(InventoryGui gui)
         {
+            // Se comparan las filas, no su orden: los filtros de comida reordenan la lista.
             var recipes = gui.m_availableRecipes;
-            int index = 0;
-            bool inSync = true;
-            foreach (Entry entry in s_entries)
-            {
-                GameObject element = entry.Pair.InterfaceElement;
-                if (element == null || !element.activeSelf)
-                {
-                    continue;
-                }
-                if (index >= recipes.Count || recipes[index].InterfaceElement != element)
-                {
-                    inSync = false;
-                    break;
-                }
-                index++;
-            }
-            if (inSync && index == recipes.Count)
-            {
-                return;
-            }
-
             var current = new HashSet<GameObject>();
             foreach (InventoryGui.RecipeDataPair pair in recipes)
             {
@@ -145,6 +186,26 @@ namespace WorkbenchSearchFilters
                 {
                     current.Add(pair.InterfaceElement);
                 }
+            }
+            int visible = 0;
+            bool inSync = current.Count == recipes.Count;
+            foreach (Entry entry in s_entries)
+            {
+                GameObject element = entry.Pair.InterfaceElement;
+                if (!inSync)
+                {
+                    break;
+                }
+                if (element == null || !element.activeSelf)
+                {
+                    continue;
+                }
+                visible++;
+                inSync = current.Contains(element);
+            }
+            if (inSync && visible == recipes.Count)
+            {
+                return;
             }
             foreach (Entry entry in s_entries)
             {
@@ -162,19 +223,46 @@ namespace WorkbenchSearchFilters
         {
             var recipes = gui.m_availableRecipes;
             recipes.Clear();
-            int[] counts = new int[Categories.All.Length];
             string term = SearchText.Trim();
 
-            foreach (Entry entry in s_entries)
+            // Recetas de cada categoría en esta estación (para quitar los botones vacíos) y las que pasan
+            // la búsqueda (para atenuar los botones sin resultados).
+            int[] available = new int[Categories.Count];
+            int[] matches = new int[Categories.Count];
+            bool[] entryMatches = new bool[s_entries.Count];
+            for (int i = 0; i < s_entries.Count; i++)
             {
-                bool matchesSearch = term.Length == 0 || Contains(entry.Name, term);
-                if (matchesSearch)
+                Category category = s_entries[i].Category;
+                available[(int)Category.All]++;
+                available[(int)category]++;
+                entryMatches[i] = term.Length == 0 || Contains(s_entries[i].Name, term);
+                if (entryMatches[i])
                 {
-                    // Los contadores respetan la búsqueda para atenuar las categorías sin resultados.
-                    counts[(int)Category.All]++;
-                    counts[(int)entry.Category]++;
+                    matches[(int)Category.All]++;
+                    matches[(int)category]++;
                 }
-                bool visible = matchesSearch && (CurrentCategory == Category.All || entry.Category == CurrentCategory);
+            }
+            s_activeCategory = available[(int)CurrentCategory] > 0 ? CurrentCategory : Category.All;
+
+            // En los filtros de comida, de más a menos vida/vigor/eitr; si no (o a igual valor), el orden del juego.
+            int[] order = new int[s_entries.Count];
+            for (int i = 0; i < order.Length; i++)
+            {
+                order[i] = i;
+            }
+            if (Categories.IsFoodType(s_activeCategory))
+            {
+                Array.Sort(order, (a, b) =>
+                {
+                    int byValue = s_entries[b].FoodValue.CompareTo(s_entries[a].FoodValue);
+                    return byValue != 0 ? byValue : a.CompareTo(b);
+                });
+            }
+
+            foreach (int i in order)
+            {
+                Entry entry = s_entries[i];
+                bool visible = entryMatches[i] && (s_activeCategory == Category.All || entry.Category == s_activeCategory);
                 GameObject element = entry.Pair.InterfaceElement;
                 if (element == null)
                 {
@@ -194,7 +282,7 @@ namespace WorkbenchSearchFilters
             float height = Mathf.Max(gui.m_recipeListBaseSize, recipes.Count * gui.m_recipeListSpace);
             gui.m_recipeListRoot.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
 
-            UpdateButtons(counts);
+            UpdateButtons(available, matches);
         }
 
         /// <summary>Búsqueda sin distinguir mayúsculas ni tildes ("espada" encuentra "Espada", "pocion" encuentra "Poción").</summary>
@@ -260,12 +348,39 @@ namespace WorkbenchSearchFilters
             }
         }
 
-        private static void UpdateButtons(int[] counts)
+        /// <summary>
+        /// Muestra solo los filtros de esta estación que tienen alguna receta, en el orden de la estación,
+        /// y atenúa los que no tienen resultados para la búsqueda.
+        /// </summary>
+        private static void UpdateButtons(int[] available, int[] matches)
         {
+            Category[] stationCategories = Categories.ForStation(s_foodStation);
+            if (s_buttonsFoodStation != s_foodStation)
+            {
+                s_buttonsFoodStation = s_foodStation;
+                foreach (Category category in stationCategories)
+                {
+                    CategoryButton button = s_buttons.Find(b => b.Category == category);
+                    button?.Background.transform.SetAsLastSibling();
+                }
+            }
+
             foreach (CategoryButton button in s_buttons)
             {
-                button.Background.color = button.Category == CurrentCategory ? s_selectedColor : s_buttonColor;
-                button.Content.color = counts[(int)button.Category] > 0 ? s_iconColor : s_emptyIconColor;
+                bool shown = button.Category == Category.All ||
+                             (Array.IndexOf(stationCategories, button.Category) >= 0 && available[(int)button.Category] > 0);
+                GameObject go = button.Background.gameObject;
+                if (go.activeSelf != shown)
+                {
+                    go.SetActive(shown);
+                }
+                button.Background.color = button.Category == s_activeCategory ? s_selectedColor : s_buttonColor;
+                Color color = button.ContentColor;
+                if (matches[(int)button.Category] == 0)
+                {
+                    color.a *= EmptyIconAlpha;
+                }
+                button.Content.color = color;
             }
         }
 
@@ -274,6 +389,7 @@ namespace WorkbenchSearchFilters
         private static void Create(InventoryGui gui)
         {
             s_buttons.Clear();
+            s_buttonsFoodStation = null;
             s_allLabel = null;
 
             // La lista de recetas está dentro de un ScrollRect: la barra ocupa su parte superior y el ScrollRect se acorta.
@@ -297,12 +413,16 @@ namespace WorkbenchSearchFilters
 
             // Acortar la lista (y su barra de scroll si está al lado y no dentro).
             list.offsetMax -= new Vector2(0f, BarHeight);
+            s_gui = gui;
+            s_list = list;
+            s_scrollbar = null;
             RectTransform scrollbar = gui.m_recipeListScroll != null ? (RectTransform)gui.m_recipeListScroll.transform : null;
             if (scrollbar != null && scrollbar.parent == parent)
             {
                 scrollbar.offsetMax -= new Vector2(0f, BarHeight);
+                s_scrollbar = scrollbar;
             }
-            gui.m_recipeListBaseSize = Mathf.Max(0f, gui.m_recipeListBaseSize - BarHeight);
+            gui.m_recipeListBaseSize -= BarHeight;
 
             TMP_Text referenceText = gui.m_recipeElementPrefab.transform.Find("name").GetComponent<TMP_Text>();
             CreateSearchField(bar, referenceText);
@@ -329,6 +449,7 @@ namespace WorkbenchSearchFilters
                         }
                     }
                     s_search = go.GetComponent<TMP_InputField>();
+                    RemoveExtras(go, s_search);
                 }
                 catch (Exception e)
                 {
@@ -365,6 +486,34 @@ namespace WorkbenchSearchFilters
                 SearchText = text ?? "";
                 RefreshRecipes();
             });
+        }
+
+        /// <summary>
+        /// Quita de la copia del buscador de construcción lo que no es el propio campo de texto, como el indicador
+        /// de la tecla F (en el menú de construcción la F enfoca el buscador; aquí no hace nada).
+        /// </summary>
+        private static void RemoveExtras(GameObject go, TMP_InputField input)
+        {
+            var keep = new HashSet<Transform>();
+            foreach (Component part in new Component[] { input.textViewport, input.textComponent, input.placeholder })
+            {
+                for (Transform t = part != null ? part.transform : null; t != null && t != go.transform; t = t.parent)
+                {
+                    keep.Add(t);
+                }
+            }
+            var remove = new List<GameObject>();
+            foreach (Transform child in go.transform)
+            {
+                if (!keep.Contains(child))
+                {
+                    remove.Add(child.gameObject);
+                }
+            }
+            foreach (GameObject extra in remove)
+            {
+                Object.DestroyImmediate(extra);
+            }
         }
 
         private static GameObject CreateSimpleInputField(RectTransform bar, TMP_Text referenceText)
@@ -408,7 +557,9 @@ namespace WorkbenchSearchFilters
 
             UITooltip tooltipSource = gui.m_craftButton != null ? gui.m_craftButton.GetComponent<UITooltip>() : null;
 
-            foreach (Category category in Categories.All)
+            Sprite foodIcon = FindFoodIcon(gui);
+
+            foreach (Category category in Categories.Buttons)
             {
                 RectTransform rect = NewRect("WSF_Cat_" + category, row);
                 Image background = rect.gameObject.AddComponent<Image>();
@@ -428,7 +579,9 @@ namespace WorkbenchSearchFilters
                 element.flexibleWidth = category == Category.All ? 1.8f : 1f;
 
                 Graphic content;
-                Sprite icon = category == Category.All ? null : FindIcon(category);
+                Color? foodColor = Categories.FoodColor(category);
+                Color contentColor = foodColor ?? Color.white;
+                Sprite icon = category == Category.All ? null : foodColor.HasValue ? foodIcon : FindIcon(category);
                 if (icon != null)
                 {
                     RectTransform iconRect = NewRect("icon", rect);
@@ -461,8 +614,21 @@ namespace WorkbenchSearchFilters
                     tooltip.m_text = Categories.Token(category); // el tooltip lo traduce al mostrarse
                 }
 
-                s_buttons.Add(new CategoryButton { Category = category, Background = background, Content = content });
+                s_buttons.Add(new CategoryButton { Category = category, Background = background, Content = content, ContentColor = contentColor });
             }
+        }
+
+        /// <summary>Icono de cubiertos del HUD (junto a la barra de vida); si no, el indicador de comida del inventario.</summary>
+        private static Sprite FindFoodIcon(InventoryGui gui)
+        {
+            if (Hud.instance != null && Hud.instance.m_foodIcon != null && Hud.instance.m_foodIcon.sprite != null)
+            {
+                return Hud.instance.m_foodIcon.sprite;
+            }
+            InventoryElement element = gui.m_playerGrid != null && gui.m_playerGrid.m_elementPrefab != null
+                ? gui.m_playerGrid.m_elementPrefab.GetComponent<InventoryElement>()
+                : null;
+            return element != null && element.m_food != null ? element.m_food.sprite : null;
         }
 
         private static void OnCategoryClicked(Category category)
@@ -477,14 +643,18 @@ namespace WorkbenchSearchFilters
             {
                 return null;
             }
-            foreach (string prefabName in Categories.IconPrefabs(category))
+            foreach (string iconPrefab in Categories.IconPrefabs(category))
             {
-                GameObject prefab = ObjectDB.instance.GetItemPrefab(prefabName);
+                string[] parts = iconPrefab.Split(':');
+                GameObject prefab = ObjectDB.instance.GetItemPrefab(parts[0]);
                 ItemDrop itemDrop = prefab != null ? prefab.GetComponent<ItemDrop>() : null;
-                if (itemDrop != null && itemDrop.m_itemData.m_shared.m_icons.Length > 0)
+                Sprite[] icons = itemDrop != null ? itemDrop.m_itemData.m_shared.m_icons : null;
+                if (icons == null || icons.Length == 0)
                 {
-                    return itemDrop.m_itemData.GetIcon();
+                    continue;
                 }
+                int variant = parts.Length > 1 && int.TryParse(parts[1], out int parsed) && parsed >= 0 && parsed < icons.Length ? parsed : 0;
+                return icons[variant];
             }
             return null;
         }

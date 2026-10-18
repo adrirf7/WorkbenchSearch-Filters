@@ -5,7 +5,7 @@
     <AssemblyName>WorkbenchSearchFilters</AssemblyName>
     <RootNamespace>WorkbenchSearchFilters</RootNamespace>
     <LangVersion>latest</LangVersion>
-    <Version>1.0.1</Version>
+    <Version>1.1.0</Version>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
@@ -72,10 +72,31 @@
     </Reference>
   </ItemGroup>
 
+  <!-- Se copia a BepInEx\scripts: ScriptEngine lo carga desde ahí y lo recarga en caliente al cambiar el .dll -->
   <Target Name="DeployToValheim" AfterTargets="Build" Condition="'$(DeployToGame)' == 'true'">
-    <MakeDir Directories="$(BepInExDir)\plugins\WorkbenchSearchFilters" />
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BepInExDir)\plugins\WorkbenchSearchFilters" />
-    <Message Importance="high" Text="WorkbenchSearchFilters copiado a $(BepInExDir)\plugins\WorkbenchSearchFilters" />
+    <MakeDir Directories="$(BepInExDir)\scripts" />
+    <!-- ScriptEngine siempre lee los símbolos: sin el .pdb al lado no carga el .dll -->
+    <Copy SourceFiles="$(TargetDir)$(TargetName).pdb;$(TargetPath)" DestinationFolder="$(BepInExDir)\scripts" />
+    <Message Importance="high" Text="WorkbenchSearchFilters copiado a $(BepInExDir)\scripts (ScriptEngine lo recarga solo)" />
+  </Target>
+
+  <!-- En Release, crea en release\ el zip para Nexus Mods y el de Thunderstore -->
+  <Target Name="PackageRelease" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
+    <PropertyGroup>
+      <PackageName>WorkbenchSearchFilters</PackageName>
+      <PackageDir>$(MSBuildProjectDirectory)\obj\package</PackageDir>
+      <ReleaseDir>$(MSBuildProjectDirectory)\release</ReleaseDir>
+    </PropertyGroup>
+    <RemoveDir Directories="$(PackageDir)" />
+    <MakeDir Directories="$(ReleaseDir)" />
+
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PackageDir)\nexus\BepInEx\plugins\WorkbenchSearchFilters" />
+    <ZipDirectory SourceDirectory="$(PackageDir)\nexus" DestinationFile="$(ReleaseDir)\$(PackageName)-$(Version)-nexus.zip" Overwrite="true" />
+
+    <Copy SourceFiles="$(TargetPath);thunderstore\manifest.json;thunderstore\README.md;thunderstore\icon.png" DestinationFolder="$(PackageDir)\thunderstore" />
+    <ZipDirectory SourceDirectory="$(PackageDir)\thunderstore" DestinationFile="$(ReleaseDir)\$(PackageName)-$(Version)-thunderstore.zip" Overwrite="true" />
+
+    <Message Importance="high" Text="Paquetes de Nexus y Thunderstore creados en $(ReleaseDir)" />
   </Target>
 
 </Project>
