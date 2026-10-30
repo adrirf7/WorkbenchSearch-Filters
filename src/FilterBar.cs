@@ -340,7 +340,7 @@ namespace WorkbenchSearchFilters
             }
             if (s_search.placeholder is TMP_Text placeholder)
             {
-                placeholder.text = Localization.instance.Localize("$wsf_search");
+                placeholder.text = Localization.instance.Localize("$menu_filter");
             }
             if (s_allLabel != null)
             {
