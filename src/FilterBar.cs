@@ -51,6 +51,20 @@ namespace WorkbenchSearchFilters
 
         internal static bool IsSearchFocused => s_search != null && s_search.isFocused;
 
+        // Fotograma hasta el que se descarta una 'f' escrita, para que la tecla que enfoca el buscador no se escriba en él.
+        private static int s_swallowFUntilFrame = -1;
+
+        /// <summary>Como en el menú de construcción, la tecla F enfoca el buscador mientras el inventario está abierto.</summary>
+        internal static void FocusOnKey()
+        {
+            if (s_search == null || s_search.isFocused || !s_search.gameObject.activeInHierarchy || !ZInput.GetKeyDown(KeyCode.F))
+            {
+                return;
+            }
+            s_swallowFUntilFrame = Time.frameCount + 1;
+            s_search.ActivateInputField();
+        }
+
         internal static void EnsureCreated(InventoryGui gui)
         {
             if (s_root != null)
@@ -480,6 +494,7 @@ namespace WorkbenchSearchFilters
             s_search.onSubmit = new TMP_InputField.SubmitEvent();
             s_search.restoreOriginalTextOnEscape = false;
             s_search.characterLimit = 40;
+            s_search.onValidateInput = (text, index, c) => (c == 'f' || c == 'F') && Time.frameCount <= s_swallowFUntilFrame ? '\0' : c;
             s_search.SetTextWithoutNotify(SearchText);
             s_search.onValueChanged.AddListener(text =>
             {
@@ -490,7 +505,7 @@ namespace WorkbenchSearchFilters
 
         /// <summary>
         /// Quita de la copia del buscador de construcción lo que no es el propio campo de texto, como el indicador
-        /// de la tecla F (en el menú de construcción la F enfoca el buscador; aquí no hace nada).
+        /// de la tecla F (el indicador no se copia; la tecla se gestiona en FocusOnKey).
         /// </summary>
         private static void RemoveExtras(GameObject go, TMP_InputField input)
         {
