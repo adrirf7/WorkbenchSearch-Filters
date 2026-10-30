@@ -25,6 +25,18 @@ namespace WorkbenchSearchFilters
         }
     }
 
+    [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.Update))]
+    internal static class InventoryGui_Update_Patch
+    {
+        private static void Postfix()
+        {
+            if (InventoryGui.IsVisible())
+            {
+                FilterBar.FocusOnKey();
+            }
+        }
+    }
+
     [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.Hide))]
     internal static class InventoryGui_Hide_Patch
     {
